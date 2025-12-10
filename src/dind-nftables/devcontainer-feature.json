@@ -60,6 +60,11 @@
             "type": "boolean",
             "default": false,
             "description": "Disable ip6tables (this option is only applicable for Docker versions 27 and greater)"
+        },
+        "enableNftables": {
+            "type": "boolean",
+            "default": true,
+            "description": "Enables experimental nftables support for the docker image within the container."
         }
     },
     "entrypoint": "/usr/local/share/docker-init.sh",

@@ -22,6 +22,7 @@ MICROSOFT_GPG_KEYS_ROLLING_URI="https://packages.microsoft.com/keys/microsoft-ro
 DOCKER_MOBY_ARCHIVE_VERSION_CODENAMES="trixie bookworm buster bullseye bionic focal jammy noble"
 DOCKER_LICENSED_ARCHIVE_VERSION_CODENAMES="trixie bookworm buster bullseye bionic focal hirsute impish jammy noble"
 DISABLE_IP6_TABLES="${DISABLEIP6TABLES:-false}"
+ENABLE_NFTABLES="${ENABLE_NFTABLES:-true}"
 
 # Default: Exit on any failure.
 set -e
@@ -867,11 +868,12 @@ set -e
 AZURE_DNS_AUTO_DETECTION=${AZURE_DNS_AUTO_DETECTION}
 DOCKER_DEFAULT_ADDRESS_POOL=${DOCKER_DEFAULT_ADDRESS_POOL}
 DOCKER_DEFAULT_IP6_TABLES=${DOCKER_DEFAULT_IP6_TABLES}
+ENABLE_NFTABLES=${ENABLE_NFTABLES}
 EOF
 
 tee -a /usr/local/share/docker-init.sh > /dev/null \
 << 'EOF'
-dockerd_start="AZURE_DNS_AUTO_DETECTION=${AZURE_DNS_AUTO_DETECTION} DOCKER_DEFAULT_ADDRESS_POOL=${DOCKER_DEFAULT_ADDRESS_POOL} DOCKER_DEFAULT_IP6_TABLES=${DOCKER_DEFAULT_IP6_TABLES} $(cat << 'INNEREOF'
+dockerd_start="AZURE_DNS_AUTO_DETECTION=${AZURE_DNS_AUTO_DETECTION} DOCKER_DEFAULT_ADDRESS_POOL=${DOCKER_DEFAULT_ADDRESS_POOL} DOCKER_DEFAULT_IP6_TABLES=${DOCKER_DEFAULT_IP6_TABLES} ENABLE_NFTABLES=${ENABLE_NFTABLES} $(cat << 'INNEREOF'
     # explicitly remove dockerd and containerd PID file to ensure that it can start properly if it was stopped uncleanly
     find /run /var/run -iname 'docker*.pid' -delete || :
     find /run /var/run -iname 'container*.pid' -delete || :
@@ -948,8 +950,15 @@ dockerd_start="AZURE_DNS_AUTO_DETECTION=${AZURE_DNS_AUTO_DETECTION} DOCKER_DEFAU
         DEFAULT_ADDRESS_POOL="--default-address-pool $DOCKER_DEFAULT_ADDRESS_POOL"
     fi
 
+    # Set nftables firewall backend if enabled
+    if [ "${ENABLE_NFTABLES}" = "true" ]; then
+        FIREWALL_BACKEND="--firewall-backend=nftables"
+    else
+        FIREWALL_BACKEND=""
+    fi
+
     # Start docker/moby engine
-    ( dockerd $CUSTOMDNS $DEFAULT_ADDRESS_POOL $DOCKER_DEFAULT_IP6_TABLES > /tmp/dockerd.log 2>&1 ) &
+    ( dockerd $CUSTOMDNS $DEFAULT_ADDRESS_POOL $DOCKER_DEFAULT_IP6_TABLES $FIREWALL_BACKEND > /tmp/dockerd.log 2>&1 ) &
 INNEREOF
 )"
 
