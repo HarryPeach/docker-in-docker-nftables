@@ -24,6 +24,7 @@ Create child containers *inside* a container, independent from the host's docker
 | installDockerBuildx | Install Docker Buildx | boolean | true |
 | installDockerComposeSwitch | Install Compose Switch (provided docker compose is available) which is a replacement to the Compose V1 docker-compose (python) executable. It translates the command line into Compose V2 docker compose then runs the latter. | boolean | true |
 | disableIp6tables | Disable ip6tables (this option is only applicable for Docker versions 27 and greater) | boolean | false |
+| enableNftables | Enables experimental nftables support for the docker image within the container. | boolean | true |
 
 ## Customizations
 
